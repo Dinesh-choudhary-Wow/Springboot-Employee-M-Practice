@@ -6,6 +6,29 @@ public class SearchRequest {
     private String letters;
     private String email;
     private Long id;
+    
+    private String sortField;
+    private String sortOrder;
+    private int limit;
+    
+	public String getSortField() {
+		return sortField;
+	}
+	public void setSortField(String sortField) {
+		this.sortField = sortField;
+	}
+	public String getSortOrder() {
+		return sortOrder;
+	}
+	public void setSortOrder(String sortOrder) {
+		this.sortOrder = sortOrder;
+	}
+	public int getLimit() {
+		return limit;
+	}
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
 	public String getFirstName() {
 		return firstName;
 	}

@@ -1,10 +1,10 @@
 package com.example.demo1.service;
 
-
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.demo1.repository.EmployeeRepository;
@@ -18,11 +18,11 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -140,7 +140,46 @@ public class EmployeeServiceImpl implements EmployeeService {
         
         criteriaQuery.where(predicates.toArray(new Predicate[0]));
 
+        
+        
+        // Add sorting based on user preferences (ID, firstName, lastName)
+//        if (sort != null) {
+//            List<Order> orders = new ArrayList<>();
+//            sort.forEach(order -> {
+//                switch (order.getProperty()) {
+//                    case "id":
+//                        orders.add(order.isAscending() ? criteriaBuilder.asc(root.get("id")) : criteriaBuilder.desc(root.get("id")));
+//                        break;
+//                    case "firstName":
+//                        // Use a default value for null entries
+//                        orders.add(order.isAscending() ? criteriaBuilder.asc(criteriaBuilder.coalesce(root.get("firstName"), criteriaBuilder.literal("DefaultFirstName"))): criteriaBuilder.desc(criteriaBuilder.coalesce(root.get("firstName"), criteriaBuilder.literal("DefaultFirstName"))));
+//                        break;
+//                    case "lastName":
+//                        orders.add(order.isAscending() ? criteriaBuilder.asc(root.get("lastName")) : criteriaBuilder.desc(root.get("lastName")));
+//                        break;
+//                    // Add more cases for additional properties if needed
+//                }
+//            });
+//            criteriaQuery.orderBy(orders);
+//        }
+        
+        
+        
+        if (!StringUtils.isEmpty(searchRequest.getSortField())) {
+            List<Order> orders = new ArrayList<>();
+            if ("asc".equalsIgnoreCase(searchRequest.getSortOrder())) {
+                orders.add(criteriaBuilder.asc(root.get(searchRequest.getSortField())));
+            } else {
+                orders.add(criteriaBuilder.desc(root.get(searchRequest.getSortField())));
+            }
+            criteriaQuery.orderBy(orders);
+        }
+        
         TypedQuery<Employee> query = entityManager.createQuery(criteriaQuery);
+        
+     // Apply limit
+        query.setMaxResults(searchRequest.getLimit());
+        
         List<Employee> result = query.getResultList();
 
         if (result.isEmpty()) {
@@ -150,6 +189,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return result;
     }
+
+	
     
     
     

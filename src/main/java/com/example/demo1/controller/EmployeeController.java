@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -65,11 +66,55 @@ public class EmployeeController {
 //    }
 
 	// using single post request
+	/*
 	@PostMapping("/search")
-	public ResponseEntity<Object> searchEmployees(@RequestBody SearchRequest searchRequest) {
+	public ResponseEntity<Object> searchEmployees ( @RequestBody SearchRequest searchRequest,
+													@RequestParam(required = false) String sortField,
+													@RequestParam(required = false, defaultValue = "asc") String sortOrder,
+													@RequestParam(required = false, defaultValue = "10") int limit) {
 		logger.log(Level.INFO, "API hitting from controller to searchEmployees");
 
 		try {
+			Sort.Direction direction = sortOrder.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+	        
+	        // Create a Sort object based on the user's input
+	        Sort sort = Sort.by(direction, sortField);
+
+			List<Employee> result = employeeService.searchEmployees(searchRequest,sort, limit);
+
+			if (result.isEmpty()) {
+				// Return a specific response for not found with a custom message
+				String message = "No matching data found for the provided criteria.";
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("message", message));
+			}
+
+			return ResponseEntity.ok(result);
+		} catch (NoMatchingDataException e) {
+			// Log the exception
+			logger.error("NoMatchingDataException: " + e.getMessage());
+
+			// Return a specific response for not found with a custom message
+			String message = "No matching data found for the provided criteria.";
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("message", message));
+		} catch (Exception e) {
+			// Log unexpected exceptions
+			logger.error("Unexpected exception: " + e.getMessage(), e);
+
+			// Return a specific response for other exceptions with a custom message
+			String message = "An unexpected error occurred.";
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(Collections.singletonMap("message", message));
+		}
+	}
+*/	
+	// search enhance -2
+	@PostMapping("/search")
+	public ResponseEntity<Object> searchEmployees ( @RequestBody SearchRequest searchRequest) {
+		logger.log(Level.INFO, "API hitting from controller to searchEmployees");
+
+		try {
+			
+	        
 			List<Employee> result = employeeService.searchEmployees(searchRequest);
 
 			if (result.isEmpty()) {
@@ -96,5 +141,6 @@ public class EmployeeController {
 					.body(Collections.singletonMap("message", message));
 		}
 	}
+	
 
 }
