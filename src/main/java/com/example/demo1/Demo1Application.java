@@ -17,4 +17,3 @@ public class Demo1Application {
 		logger.log(Level.INFO, "Exiting the Main Function");
 	}
 }
-
