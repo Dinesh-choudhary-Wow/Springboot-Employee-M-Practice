@@ -6,9 +6,12 @@ import java.util.List;
 //import org.springframework.data.domain.Sort;
 
 import com.example.demo1.vo.Employee;
+import com.example.demo1.vo.EmployeeRequest;
 import com.example.demo1.vo.SearchRequest;
 
 public interface EmployeeService {
+	
+	Employee addEmployee(EmployeeRequest employeeRequest);
 	
     List<Employee> getAllEmployees();
     
