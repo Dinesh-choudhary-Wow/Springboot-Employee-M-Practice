@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import com.example.demo1.service.EmployeeService;
 import com.example.demo1.service.exceptions.NoMatchingDataException;
 import com.example.demo1.vo.Employee;
+import com.example.demo1.vo.EmployeeRequest;
 import com.example.demo1.vo.SearchRequest;
 
 import java.util.Collections;
@@ -39,9 +40,9 @@ public class EmployeeController {
 	}
 
 	@PostMapping("/addEmployee")
-	public Employee saveEmployee(@RequestBody Employee employee) {
-		logger.log(Level.INFO, "API hitting from controller to saveEmployee");
-		return employeeService.saveEmployee(employee);
+    public Employee addEmployee(@RequestBody EmployeeRequest employeeRequest) {
+		logger.log(Level.INFO, "API hitting from Department controller to Add Employees");
+		return employeeService.addEmployee(employeeRequest);
 	}
 
 	@DeleteMapping("/{id}")
@@ -114,28 +115,23 @@ public class EmployeeController {
 
 		try {
 			
-	        
 			List<Employee> result = employeeService.searchEmployees(searchRequest);
 
 			if (result.isEmpty()) {
-				// Return a specific response for not found with a custom message
 				String message = "No matching data found for the provided criteria.";
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("message", message));
 			}
 
 			return ResponseEntity.ok(result);
 		} catch (NoMatchingDataException e) {
-			// Log the exception
 			logger.error("NoMatchingDataException: " + e.getMessage());
 
-			// Return a specific response for not found with a custom message
 			String message = "No matching data found for the provided criteria.";
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("message", message));
+			
 		} catch (Exception e) {
-			// Log unexpected exceptions
 			logger.error("Unexpected exception: " + e.getMessage(), e);
 
-			// Return a specific response for other exceptions with a custom message
 			String message = "An unexpected error occurred.";
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(Collections.singletonMap("message", message));
