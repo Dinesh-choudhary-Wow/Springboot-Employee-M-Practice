@@ -21,8 +21,8 @@ public class SearchRequest {
     private String sortField;
     private String sortOrder;
     
-    private Long startId;
-    private Long endId;
+    private int startIndex;
+    private int endIndex;
 	public String getFirstName() {
 		return firstName;
 	}
@@ -77,19 +77,18 @@ public class SearchRequest {
 	public void setSortOrder(String sortOrder) {
 		this.sortOrder = sortOrder;
 	}
-	public Long getStartId() {
-		return startId;
+	public int getStartIndex() {
+		return startIndex;
 	}
-	public void setStartId(Long startId) {
-		this.startId = startId;
+	public void setStartIndex(int startIndex) {
+		this.startIndex = startIndex;
 	}
-	public Long getEndId() {
-		return endId;
+	public int getEndIndex() {
+		return endIndex;
 	}
-	public void setEndId(Long endId) {
-		this.endId = endId;
+	public void setEndIndex(int endIndex) {
+		this.endIndex = endIndex;
 	}
-    
-    
+
 
 }

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.example.demo1.dto.DepartmentDTO;
+import com.example.demo1.dto.EmployeeWithDepartmentDTO;
 import com.example.demo1.repository.DepartmentRepository;
 import com.example.demo1.repository.EmployeeRepository;
 import com.example.demo1.service.exceptions.NoMatchingDataException;
@@ -29,6 +31,7 @@ import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -37,7 +40,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 	@Autowired
 	private EmployeeRepository employeeRepository;
-	
+
 	@Autowired
 	private DepartmentRepository departmentRepository;
 
@@ -46,27 +49,27 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 	@Override
 	@Transactional
-    public Employee addEmployee(EmployeeRequest employeeRequest) {
+	public Employee addEmployee(EmployeeRequest employeeRequest) {
 		logger.log(Level.INFO, "from Employee Service (Add Employee) -- Adding Employee");
-		
-        Department department = departmentRepository.findById(employeeRequest.getDepartmentId())
-        		.orElseThrow(() -> new IllegalArgumentException("Department not found with ID: " + employeeRequest.getDepartmentId()));
-        
-        //creating a new employee
-        Employee newEmployee = new Employee();
-        newEmployee.setFirstName(employeeRequest.getFirstName());
-        newEmployee.setLastName(employeeRequest.getLastName());
-        newEmployee.setEmail(employeeRequest.getEmail());
-        newEmployee.setPhoneNumber(employeeRequest.getPhoneNumber());
-        newEmployee.setBirthDate(employeeRequest.getBirthDate());
-        newEmployee.setJobTitle(employeeRequest.getJobTitle());
-        newEmployee.setDepartment(department);
-        
-        // saving the employee to db
-        return employeeRepository.save(newEmployee);
-    }
-	
-	
+
+		Department department = departmentRepository.findById(employeeRequest.getDepartmentId())
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Department not found with ID: " + employeeRequest.getDepartmentId()));
+
+		// creating a new employee
+		Employee newEmployee = new Employee();
+		newEmployee.setFirstName(employeeRequest.getFirstName());
+		newEmployee.setLastName(employeeRequest.getLastName());
+		newEmployee.setEmail(employeeRequest.getEmail());
+		newEmployee.setPhoneNumber(employeeRequest.getPhoneNumber());
+		newEmployee.setBirthDate(employeeRequest.getBirthDate());
+		newEmployee.setJobTitle(employeeRequest.getJobTitle());
+		newEmployee.setDepartment(department);
+
+		// saving the employee to db
+		return employeeRepository.save(newEmployee);
+	}
+
 	@Override
 	public List<Employee> getAllEmployees() {
 		logger.log(Level.INFO, "Fetching all employees");
@@ -134,7 +137,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 	// enhancing the search operations
 
-	public List<Employee> searchEmployees(SearchRequest searchRequest) {
+	public List<EmployeeWithDepartmentDTO> searchEmployees(SearchRequest searchRequest) {
 		logger.log(Level.INFO, "From Employee Service Search Operations Start: ");
 
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -142,7 +145,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 		Root<Employee> root = criteriaQuery.from(Employee.class);
 
 		List<Predicate> predicates = new ArrayList<>();
-		
+
 		logger.log(Level.INFO, "From Employee Service Search Operations (Predicate--Appending) ");
 
 		if (searchRequest.getId() != null) {
@@ -163,46 +166,41 @@ public class EmployeeServiceImpl implements EmployeeService {
 		if (!StringUtils.isEmpty(searchRequest.getJobTitle())) {
 			predicates.add(criteriaBuilder.equal(root.get("jobTitle"), searchRequest.getJobTitle()));
 		}
-		
-		// New logic for startId and endId
-	    if (searchRequest.getStartId() != null) {
-	        predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("id"), searchRequest.getStartId()));
-	    }
+		if (!StringUtils.isEmpty(searchRequest.getJobTitle())) {
+			predicates.add(criteriaBuilder.equal(root.get("jobTitle"), searchRequest.getJobTitle()));
+		}
+		if (!StringUtils.isEmpty(searchRequest.getDepartmentName())) {
+			predicates.add(criteriaBuilder.equal(root.get("department").get("departmentName"),
+					searchRequest.getDepartmentName()));
+		}
 
-	    if (searchRequest.getEndId() != null) {
-	        predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("id"), searchRequest.getEndId()));
-	    }
-	    
+		if (!StringUtils.isEmpty(searchRequest.getDepartmentIsActive())) {
+			predicates.add(criteriaBuilder.equal(root.get("department").get("departmentIsActive"),
+					searchRequest.getDepartmentIsActive()));
+		}
+
 		criteriaQuery.where(predicates.toArray(new Predicate[0]));
 
 		/*
-      	Sort sort = Sort.by(
-      	new Sort.Order(Sort.Direction.ASC, searchRequest.getSortField()));
-      	
-  		Add sorting based on user preferences (ID, firstName, lastName)
-  		if (sort != null) {
-  			List<Order> orders = new ArrayList<>();
-  			sort.forEach(order -> {
-      		switch (order.getProperty()) {
-	          	case "id":
-	              	orders.add(order.isAscending() ? criteriaBuilder.asc(root.get("id")) : criteriaBuilder.desc(root.get("id")));
-	              	break;
-	          	case "firstName":
-	              // Use a default value for null entries
-	              	orders.add(order.isAscending() ? criteriaBuilder.asc(criteriaBuilder.coalesce(root.get("firstName"), criteriaBuilder.literal("DefaultFirstName"))): criteriaBuilder.desc(criteriaBuilder.coalesce(root.get("firstName"), criteriaBuilder.literal("DefaultFirstName"))));
-	              	break;
-	          	case "lastName":
-	              	orders.add(order.isAscending() ? criteriaBuilder.asc(root.get("lastName")) : criteriaBuilder.desc(root.get("lastName")));
-	              	break;
-	          // Add more cases for additional properties if needed
-      			}
-  			});
-  		criteriaQuery.orderBy(orders);
-  		}
-		*/
+		 * Sort sort = Sort.by( new Sort.Order(Sort.Direction.ASC,
+		 * searchRequest.getSortField()));
+		 * 
+		 * Add sorting based on user preferences (ID, firstName, lastName) if (sort !=
+		 * null) { List<Order> orders = new ArrayList<>(); sort.forEach(order -> {
+		 * switch (order.getProperty()) { case "id": orders.add(order.isAscending() ?
+		 * criteriaBuilder.asc(root.get("id")) : criteriaBuilder.desc(root.get("id")));
+		 * break; case "firstName": // Use a default value for null entries
+		 * orders.add(order.isAscending() ?
+		 * criteriaBuilder.asc(criteriaBuilder.coalesce(root.get("firstName"),
+		 * criteriaBuilder.literal("DefaultFirstName"))):
+		 * criteriaBuilder.desc(criteriaBuilder.coalesce(root.get("firstName"),
+		 * criteriaBuilder.literal("DefaultFirstName")))); break; case "lastName":
+		 * orders.add(order.isAscending() ? criteriaBuilder.asc(root.get("lastName")) :
+		 * criteriaBuilder.desc(root.get("lastName"))); break; // Add more cases for
+		 * additional properties if needed } }); criteriaQuery.orderBy(orders); }
+		 */
 		logger.log(Level.INFO, "From Employee Service Search Operations Perforiming sort operations ");
 
-		
 		// Sort Logic
 		if (!StringUtils.isEmpty(searchRequest.getSortField())) {
 			List<Order> orders = new ArrayList<>();
@@ -216,6 +214,15 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 		TypedQuery<Employee> query = entityManager.createQuery(criteriaQuery);
 
+		// New logic for startId and endId
+		if (searchRequest.getStartIndex() > 0) {
+			query.setFirstResult(searchRequest.getStartIndex() - 1);
+		}
+
+		if (searchRequest.getEndIndex() > 0) {
+			query.setMaxResults(searchRequest.getEndIndex() - searchRequest.getStartIndex() + 1);
+		}
+
 		List<Employee> result = query.getResultList();
 
 		if (result.isEmpty()) {
@@ -223,6 +230,32 @@ public class EmployeeServiceImpl implements EmployeeService {
 		}
 		logger.log(Level.INFO, "From Employee Service Search Operations End: ");
 
-		return result;
+		// Convert employees to EmployeeWithDepartmentDTO
+		List<EmployeeWithDepartmentDTO> resultDTO = result.stream().map(employee -> {
+			EmployeeWithDepartmentDTO employeeDTO = new EmployeeWithDepartmentDTO();
+			employeeDTO.setId(employee.getId());
+			employeeDTO.setFirstName(employee.getFirstName());
+			employeeDTO.setLastName(employee.getLastName());
+			employeeDTO.setEmail(employee.getEmail());
+			employeeDTO.setPhoneNumber(employee.getPhoneNumber());
+			employeeDTO.setBirthDate(employee.getBirthDate());
+			employeeDTO.setJobTitle(employee.getJobTitle());
+
+			// Create and set DepartmentDTO
+			DepartmentDTO departmentDTO = new DepartmentDTO();
+			Department department = employee.getDepartment();
+			if (department != null) {
+				departmentDTO.setId(department.getId());
+				departmentDTO.setDepartmentName(department.getDepartmentName());
+				departmentDTO.setCreationDate(department.getCreationDate());
+				departmentDTO.setDepartmentIsActive(department.getDepartmentIsActive());
+			}
+
+			employeeDTO.setDepartment(departmentDTO);
+
+			return employeeDTO;
+		}).collect(Collectors.toList());
+
+		return resultDTO;
 	}
 }

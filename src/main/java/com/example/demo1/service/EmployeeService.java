@@ -3,6 +3,8 @@ package com.example.demo1.service;
 
 import java.util.List;
 
+import com.example.demo1.dto.EmployeeWithDepartmentDTO;
+
 //import org.springframework.data.domain.Sort;
 
 import com.example.demo1.vo.Employee;
@@ -28,7 +30,7 @@ public interface EmployeeService {
     List<Employee> getEmployeesWithThreeLetterName(String letters);
     
 //    List<Employee> searchEmployees(SearchRequest searchRequest, Sort sort, int limit);
-    List<Employee> searchEmployees(SearchRequest searchRequest);
+    List<EmployeeWithDepartmentDTO> searchEmployees(SearchRequest searchRequest);
 
     
 }
