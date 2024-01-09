@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.demo1.dto.EmployeeWithDepartmentDTO;
 import com.example.demo1.service.EmployeeService;
 import com.example.demo1.service.exceptions.NoMatchingDataException;
 import com.example.demo1.vo.Employee;
@@ -115,7 +116,7 @@ public class EmployeeController {
 
 		try {
 			
-			List<Employee> result = employeeService.searchEmployees(searchRequest);
+			List<EmployeeWithDepartmentDTO> result = employeeService.searchEmployees(searchRequest);
 
 			if (result.isEmpty()) {
 				String message = "No matching data found for the provided criteria.";
